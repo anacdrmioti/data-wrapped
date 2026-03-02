@@ -12,45 +12,59 @@ uploaded_file = st.file_uploader("Sube tu archivo CSV")
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
     
-    st.subheader("Vista previa de los datos")
-    st.dataframe(df.head())
+    # --- Sidebar ---
+    with st.sidebar:
+        st.markdown("## 🎵 Data Wrapped Dashboard")
+        st.markdown("---")
+        page = st.radio("📊 Sección", [
+            "🏆 Wrapped", "🎵 Top 5", "📈 Evolución Temporal",
+            "🎸 Géneros", "👥 Comparativa", "🎯 Recomendaciones"
+        ])
+        st.markdown("---")
+        st.markdown("<p style='color:#666;font-size:0.75rem;text-align:center'>TFM · Análisis de Datos</p>", unsafe_allow_html=True)
     
-    # Estadísticas básicas
-    st.subheader("Estadísticas básicas")
-    st.write(df.describe())
+    # --- Contenido según página ---
+    if page == "🏆 Wrapped":
+        st.subheader("Vista previa de los datos")
+        st.dataframe(df.head())
 
-    # Detectar columnas numéricas y categóricas
-    num_cols = df.select_dtypes(include='number').columns.tolist()
-    cat_cols = df.select_dtypes(include='object').columns.tolist()
+        st.subheader("Estadísticas básicas")
+        st.write(df.describe())
 
-    # Gráficas automáticas de columnas numéricas
-    if num_cols:
-        st.subheader("Gráficas de variables numéricas")
-        col_num = st.selectbox("Selecciona columna para gráfica", num_cols)
-        fig = px.histogram(df, x=col_num, nbins=20, title=f"Distribución de {col_num}")
-        st.plotly_chart(fig, use_container_width=True)
+        st.subheader("Insights rápidos")
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        cat_cols = df.select_dtypes(include='object').columns.tolist()
 
-        # Boxplot
-        fig2 = px.box(df, y=col_num, title=f"Boxplot de {col_num}")
-        st.plotly_chart(fig2, use_container_width=True)
+        if num_cols:
+            max_col = df[num_cols].mean().idxmax()
+            st.write(f"- La variable con mayor media es **{max_col}**: {df[max_col].mean():.2f}")
+            min_col = df[num_cols].mean().idxmin()
+            st.write(f"- La variable con menor media es **{min_col}**: {df[min_col].mean():.2f}")
+
+        if cat_cols:
+            for c in cat_cols:
+                top_value = df[c].value_counts().idxmax()
+                st.write(f"- En **{c}**, la categoría más frecuente es **{top_value}**")
     
-    # Gráficas automáticas de columnas categóricas
-    if cat_cols:
-        st.subheader("Top categorías")
-        col_cat = st.selectbox("Selecciona columna categórica", cat_cols)
-        top_cat = df[col_cat].value_counts().nlargest(10)
-        fig3 = px.bar(top_cat, x=top_cat.index, y=top_cat.values, title=f"Top 10 de {col_cat}")
-        st.plotly_chart(fig3, use_container_width=True)
+    elif page == "🎵 Top 5":
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        cat_cols = df.select_dtypes(include='object').columns.tolist()
 
-    # Insights automáticos simples
-    st.subheader("Insights rápidos")
-    if num_cols:
-        max_col = df[num_cols].mean().idxmax()
-        st.write(f"- La variable con mayor media es **{max_col}**: {df[max_col].mean():.2f}")
-        min_col = df[num_cols].mean().idxmin()
-        st.write(f"- La variable con menor media es **{min_col}**: {df[min_col].mean():.2f}")
+        if cat_cols:
+            st.subheader("Top categorías (Top 5)")
+            for c in cat_cols:
+                top5 = df[c].value_counts().nlargest(5)
+                fig = px.bar(top5, x=top5.index, y=top5.values, title=f"Top 5 de {c}")
+                st.plotly_chart(fig, use_container_width=True)
 
-    if cat_cols:
-        for c in cat_cols:
-            top_value = df[c].value_counts().idxmax()
-            st.write(f"- En **{c}**, la categoría más frecuente es **{top_value}**")
+    elif page == "📈 Evolución Temporal":
+        st.write("Aquí puedes poner tus gráficos de evolución temporal por mes o fecha")
+
+    elif page == "🎸 Géneros":
+        st.write("Aquí podrías poner análisis por categorías especiales, como 'Géneros'")
+
+    elif page == "👥 Comparativa":
+        st.write("Comparativa entre usuarios, meses o categorías")
+
+    elif page == "🎯 Recomendaciones":
+        st.write("Recomendaciones automáticas basadas en tus datos")
