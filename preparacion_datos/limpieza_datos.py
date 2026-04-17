@@ -761,5 +761,5 @@ def limpieza_datos(df, nombre):    # Limpieza base
     df = calcular_score_evento(df)
    
     df["persona_id"] = nombre
-
+    
     return df
