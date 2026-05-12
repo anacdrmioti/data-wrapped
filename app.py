@@ -3,6 +3,10 @@ import datetime
 from preparacion_datos.pipeline_limpieza_datos import pipeline_carga_y_limpieza_datos
 from preparacion_datos.limpieza_datos import construir_tabla_tracks, construir_tabla_artistas, construir_tabla_usuario_track, construir_tabla_usuarios_resumen, construir_preferencias_periodo_dia, construir_preferencias_dia_semana, construir_preferencias_contexto_track, construir_tabla_escuchas, construir_matriz_usuario_track
 from wrapped.visualizaciones import visualizacion_artistas
+from recomendador.recomendador_personal import generador_embeddings_canciones, recomendador_historico_escuchas
+from recomendador.codificador_canciones import song_to_text
+
+import pandas as pd
 
 
 if "pagina" not in st.session_state:
@@ -103,8 +107,6 @@ elif st.session_state.pagina == "wrapped":
         st.session_state.fecha_fin_wrapped = df["fecha"].max()
         st.session_state.generacion_tablas_wrapped = True
     
-    print(st.session_state.generacion_tablas_wrapped)
-
     if st.session_state.generacion_tablas_wrapped == True:
 
         with st.status(" Generando todas las tablas necesarias con el filtrado de fechas establecido...", expanded=True) as status:
@@ -261,7 +263,11 @@ elif st.session_state.pagina == "recomendadores_config":
         fecha_inicio, fecha_fin = fecha_min, fecha_max
 
     st.markdown("""
-    Además, el sistema va a tener en cuenta tu estado de ánimo actual. En la siguiente pantalla se te harán algunas preguntas sencillas sobre cómo te sientes o qué tipo de música te apetece escuchar en este momento, con el objetivo de ajustar aún más las recomendaciones a tu contexto actual.
+    Además, el sistema también tiene en cuenta tu estado de ánimo y contexto actual de escucha.
+
+    En la siguiente pantalla podrás escribir libremente una frase sobre cómo te sientes o qué tipo de música te apetece escuchar en este momento, por ejemplo: “hoy me apetece escuchar música energética para entrenar”, “quiero algo tranquilo para estudiar” o “estoy en mood de fiesta”.
+
+    El objetivo es ajustar aún más las recomendaciones a tu contexto inmediato, combinando tu historial musical con la intención de escucha que expreses en ese momento.
     """)
 
     if st.button("Ir al recomendador personal"):
@@ -291,6 +297,10 @@ elif st.session_state.pagina == "recomendador_personal":
             st.session_state.df_pref_contexto_track_recomendador = construir_preferencias_contexto_track(df_filtrado)
             st.write("Tabla de preferencias por contexto de escucha generada ✅")
 
+            path_canciones_clasificadas = r"C:\Users\Ana\Desktop\MASTER IA Y ANALITICA\TFM\data-wrapped\canciones_clasificadas.csv"
+            st.session_state.df_embeddings_canciones = generador_embeddings_canciones(st.session_state.df_tracks_recomendador, path_canciones_clasificadas)
+            st.write("Embeddings de canciones generados ✅")
+
             st.session_state.generacion_tablas_recomendador_personal = False
 
             st.rerun()
@@ -298,7 +308,7 @@ elif st.session_state.pagina == "recomendador_personal":
     col1, col2, col3 = st.columns([6, 2, 2])
 
     with col1:
-        st.markdown("## 🎯 Recomendador Personal")
+        st.markdown("## 🎯 Generación de Playlists en función de tu estado de ánimo y del historial de reproducciones")
 
     with col2:
         if st.button("⬅️ Menú principal"):
@@ -310,6 +320,142 @@ elif st.session_state.pagina == "recomendador_personal":
             st.session_state.pagina = "recomendadores_config"
             st.rerun()
     
-    print(st.session_state.df_tracks_recomendador.head())
-    print(st.session_state.df_pref_contexto_track_recomendador.head())
-        
+    st.subheader("🎧 Personaliza tu recomendación musical")
+
+    GENEROS = [
+        "pop", "rock", "indie", "alternativo",
+        "hip-hop", "rap", "trap", "drill",
+        "electronic", "house", "techno", "edm",
+        "reggaeton", "latin", "urbano",
+        "r&b", "soul", "funk",
+        "jazz", "blues",
+        "classical", "instrumental",
+        "folk", "acoustic", "singer-songwriter",
+        "metal", "punk",
+        "ambient", "lofi",
+        "soundtrack", "other"
+    ]
+
+    generos_usuario = st.multiselect(
+        "Selecciona géneros",
+        GENEROS
+    )
+
+    print(generos_usuario)
+
+    MOODS = [
+        "feliz", "alegre", "euforico",
+        "triste", "melancolico", "nostalgico",
+        "romantico", "amoroso",
+        "relajado", "calmado", "chill",
+        "energico", "motivador", "epico",
+        "agresivo", "oscuro", "intenso",
+        "sensual", "suave",
+        "dramatico", "profundo",
+        "divertido", "fiestero",
+        "other"
+    ]
+
+    moods_usuario = st.multiselect(
+        "¿Qué mood buscas?",
+        MOODS
+    )
+
+    CONTEXTOS = [
+        "fiesta", "discoteca",
+        "gym", "entrenar",
+        "estudiar", "trabajar",
+        "conducir", "viajar",
+        "casa", "relax",
+        "noche", "madrugada",
+        "mañana", "tarde",
+        "verano", "invierno",
+        "romance", "cita",
+        "tristeza", "desamor",
+        "concentracion",
+        "social", "amigos",
+        "other"
+    ]
+
+    contextos_usuario = st.multiselect(
+        "¿En qué contexto escucharás música?",
+        CONTEXTOS
+    )
+
+    st.markdown("### ⚡ Características musicales")
+
+    energia_usuario = st.slider(
+        "Nivel de energía",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5
+    )
+
+    danceability_usuario = st.slider(
+        "Nivel de baile",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5
+    )
+
+    valencia_usuario = st.slider(
+        "Valencia emocional",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
+        help="0 = triste/melancólico · 1 = alegre/feliz"
+    )
+
+    instrumentalidad_usuario = st.slider(
+        "Nivel instrumental",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
+        help="0 = canciones centradas en la voz · 1 = canciones centradas en la instrumentación"
+    )
+
+    intensidad_usuario = st.slider(
+        "Intensidad emocional",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
+        help="0 = suave/relajado · 1 = intenso/explosivo"
+    )
+    
+    idioma_usuario = st.multiselect(
+        "Idioma",
+        ["espanol", "ingles", "frances", "coreano", "japones"],
+        help="Filtra canciones por idioma"
+    )
+
+    if st.button("Obtener mi playlist personalizada"):
+        query = song_to_text(moods_usuario, generos_usuario, contextos_usuario, energia_usuario, valencia_usuario, danceability_usuario, instrumentalidad_usuario, intensidad_usuario)
+
+        recomendaciones_historico = recomendador_historico_escuchas(
+            query,
+            idioma_usuario,
+            st.session_state.df_tracks_recomendador,
+            st.session_state.df_embeddings_canciones
+        )
+
+        st.markdown("## 🎧 Tu playlist recomendada")
+
+        for i, row in enumerate(recomendaciones_historico.itertuples(), 1):
+
+            with st.container(border=True):
+
+                col1, col2 = st.columns([5, 1])
+
+                with col1:
+                    st.markdown(
+                        f"""
+                        ### {i}. {row.nombre_cancion}
+                        **{row.nombre_artista}**
+                        """
+                    )
+
+                with col2:
+                    st.metric(
+                        label="Score",
+                        value=f"{row.score_recomendacion:.3f}"
+                    )
