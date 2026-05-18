@@ -2,9 +2,12 @@ import streamlit as st
 import datetime
 from preparacion_datos.pipeline_limpieza_datos import pipeline_carga_y_limpieza_datos
 from preparacion_datos.limpieza_datos import construir_tabla_tracks, construir_tabla_artistas, construir_tabla_usuario_track, construir_tabla_usuarios_resumen, construir_preferencias_periodo_dia, construir_preferencias_dia_semana, construir_preferencias_contexto_track, construir_tabla_escuchas, construir_matriz_usuario_track
-from wrapped.visualizaciones import visualizacion_artistas
 from recomendador.recomendador_personal import generador_embeddings_canciones, recomendador_historico_escuchas
 from recomendador.codificador_canciones import song_to_text
+from wrapped.Wrapped_artistas_def import render_artistas_wrapped
+from wrapped.Wrapped_metricasgral import render_metricas_generales
+from wrapped.Wrapped_canciones_def import render_canciones_wrapped
+from karaoke.karaoke_ui import render_karaoke
 
 import pandas as pd
 
@@ -68,15 +71,17 @@ elif st.session_state.pagina == "app":
             st.session_state.pagina = "recomendadores_config"
             st.rerun()
 
+
     with col3:
+        if st.button("🤖 Chatbot", use_container_width=True):
+            st.session_state.pagina = "chatbot"
+            st.rerun()
+
+    with col4:
         if st.button("🎤 Karaoke", use_container_width=True):
             st.session_state.pagina = "karaoke"
             st.rerun()
 
-    with col4:
-        if st.button("🤖 Chatbot", use_container_width=True):
-            st.session_state.pagina = "chatbot"
-            st.rerun()
 
 # ------------------ PANTALLA WRAPPED CONFIG ------------------
 elif st.session_state.pagina == "wrapped_config":
@@ -107,6 +112,8 @@ elif st.session_state.pagina == "wrapped":
         st.session_state.fecha_fin_wrapped = df["fecha"].max()
         st.session_state.generacion_tablas_wrapped = True
     
+    print(st.session_state.generacion_tablas_wrapped)
+
     if st.session_state.generacion_tablas_wrapped == True:
 
         with st.status(" Generando todas las tablas necesarias con el filtrado de fechas establecido...", expanded=True) as status:
@@ -205,15 +212,29 @@ elif st.session_state.pagina == "wrapped":
         if st.button("🎯 Tipo de oyente"):
             st.session_state.seccion_wrapped = "Tipo_oyente"  
     
+    
     if st.session_state.seccion_wrapped == "General":
-        st.markdown("## Métricas Generales")
+
+        render_metricas_generales(
+            st.session_state.df_usuarios_resumen,
+            st.session_state.df_pref_periodo,
+            st.session_state.df_pref_dia,
+            st.session_state.df_escuchas,
+            st.session_state.df_artistas,
+            st.session_state.df_tracks
+        )
 
     elif st.session_state.seccion_wrapped == "Artistas":
         st.markdown("## 🎤 Métricas de Artistas")
-        visualizacion_artistas(st.session_state.df_artistas)
+        render_artistas_wrapped(
+            st.session_state.df_artistas,
+            st.session_state.df_escuchas)
 
     elif st.session_state.seccion_wrapped == "Canciones":
-        st.markdown("## 🎧 Métricas de Canciones")
+        render_canciones_wrapped(
+            st.session_state.df_tracks,
+            st.session_state.df_escuchas
+        )
 
     elif st.session_state.seccion_wrapped == "Generos":
         st.markdown("## 🎼 Métricas de Géneros")
@@ -275,6 +296,7 @@ elif st.session_state.pagina == "recomendadores_config":
         st.session_state.fecha_inicio_recomendador_personal = fecha_inicio
         st.session_state.fecha_fin_recomendador_personal = fecha_fin
         st.session_state.generacion_tablas_recomendador_personal = True
+        st.session_state.mostrar_metricas = False
         st.rerun()
 
 elif st.session_state.pagina == "recomendador_personal":
@@ -297,7 +319,7 @@ elif st.session_state.pagina == "recomendador_personal":
             st.session_state.df_pref_contexto_track_recomendador = construir_preferencias_contexto_track(df_filtrado)
             st.write("Tabla de preferencias por contexto de escucha generada ✅")
 
-            path_canciones_clasificadas = r"C:\Users\Ana\Desktop\MASTER IA Y ANALITICA\TFM\data-wrapped\canciones_clasificadas.csv"
+            path_canciones_clasificadas = "data/canciones_clasificadas.csv"
             st.session_state.df_embeddings_canciones = generador_embeddings_canciones(st.session_state.df_tracks_recomendador, path_canciones_clasificadas)
             st.write("Embeddings de canciones generados ✅")
 
@@ -316,135 +338,161 @@ elif st.session_state.pagina == "recomendador_personal":
             st.rerun()
     
     with col3:
-        if st.button("⬅️ Configuración"):
+        if st.button("⬅️ Configuración Fechas"):
             st.session_state.pagina = "recomendadores_config"
             st.rerun()
     
     st.subheader("🎧 Personaliza tu recomendación musical")
 
-    GENEROS = [
-        "pop", "rock", "indie", "alternativo",
-        "hip-hop", "rap", "trap", "drill",
-        "electronic", "house", "techno", "edm",
-        "reggaeton", "latin", "urbano",
-        "r&b", "soul", "funk",
-        "jazz", "blues",
-        "classical", "instrumental",
-        "folk", "acoustic", "singer-songwriter",
-        "metal", "punk",
-        "ambient", "lofi",
-        "soundtrack", "other"
-    ]
-
-    generos_usuario = st.multiselect(
-        "Selecciona géneros",
-        GENEROS
-    )
-
-    print(generos_usuario)
-
-    MOODS = [
-        "feliz", "alegre", "euforico",
-        "triste", "melancolico", "nostalgico",
-        "romantico", "amoroso",
-        "relajado", "calmado", "chill",
-        "energico", "motivador", "epico",
-        "agresivo", "oscuro", "intenso",
-        "sensual", "suave",
-        "dramatico", "profundo",
-        "divertido", "fiestero",
-        "other"
-    ]
-
-    moods_usuario = st.multiselect(
-        "¿Qué mood buscas?",
-        MOODS
-    )
-
-    CONTEXTOS = [
-        "fiesta", "discoteca",
-        "gym", "entrenar",
-        "estudiar", "trabajar",
-        "conducir", "viajar",
-        "casa", "relax",
-        "noche", "madrugada",
-        "mañana", "tarde",
-        "verano", "invierno",
-        "romance", "cita",
-        "tristeza", "desamor",
-        "concentracion",
-        "social", "amigos",
-        "other"
-    ]
-
-    contextos_usuario = st.multiselect(
-        "¿En qué contexto escucharás música?",
-        CONTEXTOS
-    )
-
-    st.markdown("### ⚡ Características musicales")
-
-    energia_usuario = st.slider(
-        "Nivel de energía",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.5
-    )
-
-    danceability_usuario = st.slider(
-        "Nivel de baile",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.5
-    )
-
-    valencia_usuario = st.slider(
-        "Valencia emocional",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.5,
-        help="0 = triste/melancólico · 1 = alegre/feliz"
-    )
-
-    instrumentalidad_usuario = st.slider(
-        "Nivel instrumental",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.5,
-        help="0 = canciones centradas en la voz · 1 = canciones centradas en la instrumentación"
-    )
-
-    intensidad_usuario = st.slider(
-        "Intensidad emocional",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.5,
-        help="0 = suave/relajado · 1 = intenso/explosivo"
-    )
+    if st.button("Actualizar métricas"):
+        st.session_state.mostrar_metricas = True
+        st.rerun()
     
-    idioma_usuario = st.multiselect(
-        "Idioma",
-        ["espanol", "ingles", "frances", "coreano", "japones"],
-        help="Filtra canciones por idioma"
-    )
+    print("a")
+    
+    if st.session_state.mostrar_metricas:
 
-    if st.button("Obtener mi playlist personalizada"):
-        query = song_to_text(moods_usuario, generos_usuario, contextos_usuario, energia_usuario, valencia_usuario, danceability_usuario, instrumentalidad_usuario, intensidad_usuario)
+        GENEROS = [
+            "pop", "rock", "indie", "alternativo",
+            "hip-hop", "rap", "trap", "drill",
+            "electronic", "house", "techno", "edm",
+            "reggaeton", "latin", "urbano",
+            "r&b", "soul", "funk",
+            "jazz", "blues",
+            "classical", "instrumental",
+            "folk", "acoustic", "singer-songwriter",
+            "metal", "punk",
+            "ambient", "lofi",
+            "soundtrack", "other"
+        ]
 
-        recomendaciones_historico = recomendador_historico_escuchas(
-            query,
-            idioma_usuario,
-            st.session_state.df_tracks_recomendador,
-            st.session_state.df_embeddings_canciones
+        generos_usuario = st.multiselect(
+            "Selecciona géneros",
+            GENEROS
         )
+
+        MOODS = [
+            "feliz", "alegre", "euforico",
+            "triste", "melancolico", "nostalgico",
+            "romantico", "amoroso",
+            "relajado", "calmado", "chill",
+            "energico", "motivador", "epico",
+            "agresivo", "oscuro", "intenso",
+            "sensual", "suave",
+            "dramatico", "profundo",
+            "divertido", "fiestero",
+            "other"
+        ]
+
+        moods_usuario = st.multiselect(
+            "¿Qué mood buscas?",
+            MOODS
+        )
+
+        CONTEXTOS = [
+            "fiesta", "discoteca",
+            "gym", "entrenar",
+            "estudiar", "trabajar",
+            "conducir", "viajar",
+            "casa", "relax",
+            "noche", "madrugada",
+            "mañana", "tarde",
+            "verano", "invierno",
+            "romance", "cita",
+            "tristeza", "desamor",
+            "concentracion",
+            "social", "amigos",
+            "other"
+        ]
+
+        contextos_usuario = st.multiselect(
+            "¿En qué contexto escucharás música?",
+            CONTEXTOS
+        )
+
+        st.markdown("### ⚡ Características musicales")
+
+        energia_usuario = st.slider(
+            "Nivel de energía",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5
+        )
+
+        danceability_usuario = st.slider(
+            "Nivel de baile",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5
+        )
+
+        valencia_usuario = st.slider(
+            "Valencia emocional",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            help="0 = triste/melancólico · 1 = alegre/feliz"
+        )
+
+        instrumentalidad_usuario = st.slider(
+            "Nivel instrumental",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            help="0 = canciones centradas en la voz · 1 = canciones centradas en la instrumentación"
+        )
+
+        intensidad_usuario = st.slider(
+            "Intensidad emocional",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            help="0 = suave/relajado · 1 = intenso/explosivo"
+        )
+        
+        idioma_usuario = st.multiselect(
+            "Idioma",
+            ["espanol", "ingles", "frances", "coreano", "japones"],
+            help="Filtra canciones por idioma"
+        )
+
+        if st.button("Obtener mi playlist personalizada"):
+
+            query = song_to_text(
+                moods_usuario,
+                generos_usuario,
+                contextos_usuario,
+                energia_usuario,
+                valencia_usuario,
+                danceability_usuario,
+                instrumentalidad_usuario,
+                intensidad_usuario
+            )
+
+            recomendaciones_historico = recomendador_historico_escuchas(
+                query,
+                idioma_usuario,
+                st.session_state.df_tracks_recomendador,
+                st.session_state.df_embeddings_canciones
+            )
+
+            # Guardamos recomendaciones
+            st.session_state.recomendaciones_historico = recomendaciones_historico
+        
+            st.session_state.mostrar_metricas = False
+            st.rerun()
+
+
+    # Mostrar playlist si existe
+    if "recomendaciones_historico" in st.session_state:
 
         st.markdown("## 🎧 Tu playlist recomendada")
 
-        for i, row in enumerate(recomendaciones_historico.itertuples(), 1):
+        for i, row in enumerate(st.session_state.recomendaciones_historico.itertuples(), 1):
 
             with st.container(border=True):
 
-                col1, col2 = st.columns([5, 1])
+                col1, col2, col3 = st.columns([5, 1, 1])
 
                 with col1:
                     st.markdown(
@@ -459,3 +507,123 @@ elif st.session_state.pagina == "recomendador_personal":
                         label="Score",
                         value=f"{row.score_recomendacion:.3f}"
                     )
+
+                with col3:
+
+                    if st.button("▶️", key=f"play_{i}"):
+
+                        st.session_state.cancion_karaoke = {
+                            "cancion": row.nombre_cancion,
+                            "artista": row.nombre_artista
+                        }
+
+                        st.session_state.pagina = "karaoke_recomendacion"
+
+                        st.rerun()
+
+elif st.session_state.pagina == "karaoke_recomendacion":
+
+    col1, col2, col3 = st.columns([6, 2, 2])
+
+    with col1:
+        st.markdown("## Karoke de tu canción recomendada")
+
+    with col2:
+        if st.button("⬅️ Menú principal"):
+            st.session_state.pagina = "app"
+            st.rerun()
+    
+    with col3:
+        if st.button("⬅️ Recomendaciones canciones"):
+            st.session_state.pagina = "recomendador_personal"
+            st.rerun()
+
+
+    render_karaoke(
+        st.session_state.cancion_karaoke["cancion"],
+        st.session_state.cancion_karaoke["artista"]
+    )
+                       
+
+
+# ------------------ PANTALLA CHATBOT ------------------
+elif st.session_state.pagina == "chatbot":
+ 
+    if st.button("← Volver"):
+        st.session_state.pagina = "app"
+        st.rerun()
+ 
+    from chatbot.chatbot_ui import render_chatbot
+    from preparacion_datos.limpieza_datos import (
+        construir_tabla_artistas,
+        construir_tabla_usuario_track,
+        construir_tabla_usuarios_resumen,
+        construir_preferencias_periodo_dia,
+        construir_preferencias_dia_semana,
+    )
+ 
+    # Construir el dict de tablas si no está ya en sesión
+    if "data_chatbot" not in st.session_state:
+        with st.spinner("Preparando datos para el chatbot..."):
+            df_raw = st.session_state.data_procesada
+ 
+            df_ut = construir_tabla_usuario_track(df_raw)
+            df_art = construir_tabla_artistas(df_raw)
+            df_res = construir_tabla_usuarios_resumen(df_raw, df_ut)
+            df_per = construir_preferencias_periodo_dia(df_raw)
+            df_dia = construir_preferencias_dia_semana(df_raw)
+ 
+            # Tabla de artistas desglosada por persona_id para el chatbot.
+            # df_art agrupa solo por artista (sin persona_id), así que la
+            # construimos desde df_raw directamente.
+            def _primer_valor(x):
+                v = x.dropna()
+                return v.iloc[0] if len(v) > 0 else None
+ 
+            df_art_chatbot = (
+                df_raw.groupby(["persona_id", "artista_clave"])
+                .agg(
+                    nombre_artista=("nombre_artista", _primer_valor),
+                    minutos_totales=("minutos_reproducidos", "sum"),
+                    reproducciones_totales=("track_clave", "count"),
+                )
+                .reset_index()
+            )
+ 
+            st.session_state.data_chatbot = {
+                "usuario_track": df_ut,
+                "artistas": df_art_chatbot,  # ← sustituido, ahora tiene persona_id
+                "usuarios_resumen": df_res,
+                "preferencias_periodo_dia": df_per,
+                "preferencias_dia_semana": df_dia,
+            }
+ 
+    render_chatbot(st.session_state.data_chatbot, st.session_state.nombre)
+
+# ------------------ PANTALLA KARAOKE ------------------
+elif st.session_state.pagina == "karaoke":
+    st.markdown("""
+    <style>
+    .lyric-box {
+        background: black; padding: 30px; border-radius: 20px; 
+        border: 3px solid #1DB954; text-align: center; margin-top: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([6, 2])
+    with col1:
+        st.markdown("## 🎤 Karaoke")
+    with col2:
+        if st.button("⬅️ Menú principal"):
+            st.session_state.pagina = "app"
+            st.rerun()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        cancion = st.text_input("🎵 Canción", placeholder="Ej: Ni borracho")
+    with col2:
+        artista = st.text_input("🎤 Artista", placeholder="Ej: Quevedo")
+
+    if st.button("🚀 PREPARAR ESCENARIO"):
+        render_karaoke(cancion, artista)

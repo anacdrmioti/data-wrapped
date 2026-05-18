@@ -52,8 +52,6 @@ def generador_embeddings_canciones(df_track, path_csv):
     # modelo
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    print("COMIENZA LA GENERACION DE EMBEDDINGS")
-
     embeddings = model.encode(
         df["text_embedding"].tolist(),
         batch_size=32,
@@ -66,27 +64,20 @@ def generador_embeddings_canciones(df_track, path_csv):
 
 def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_embeddings_canciones):
 
-    print("Generando el embeddding de la query")
     # Primero, vamos a calcular el embedding del usuario basado en sus preferencias
     model = SentenceTransformer('all-MiniLM-L6-v2')
     query_embedding = model.encode([query])[0]
 
-    print(df_embeddings_canciones.columns)
-
-    print("Hacemos el filtrado por idioma")
     df_filtrado = df_embeddings_canciones[
         df_embeddings_canciones["idioma"].isin(idiomas_usuario)
     ]
 
-    print("Hacemos el filtrado sobre la general")
     df = df_tracks.copy()
     df = df.merge(
         df_filtrado[["nombre_cancion", "nombre_artista"]],
         on=["nombre_cancion", "nombre_artista"],
         how="inner"
     )
-
-    print("Calculando los pesos en base al historial de reproducción")
 
     # Sabemos que existen features que tienen que ser bajas para que la canción sea recomendada, como el porcentaje de saltada y skip temprano. 
     # Por lo tanto, vamos a invertir estas features para que el modelo pueda aprender mejor.
@@ -109,7 +100,6 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_embedd
         0.2 * np.log(df["reproducciones_totales"] + 1) +
         0.1 * df["no_skip"]
     )
-    print("Pesos calculados")
 
     # Agregamos a df el embedding y quitamos posibles canciones repetidas o que no tengan embedding definido:
 

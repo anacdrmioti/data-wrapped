@@ -1,3 +1,7 @@
 streamlit
 pandas
+groq
+python-dotenv
+syncedlyrics
 plotly
+google-api-python-client

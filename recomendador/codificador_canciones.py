@@ -348,7 +348,6 @@ def song_to_text(
     intensidad
 ):
 
-    # Convertir strings tipo "['rock', 'indie']" a listas
     if isinstance(mood, str):
         mood = ast.literal_eval(mood)
 
@@ -358,73 +357,65 @@ def song_to_text(
     if isinstance(contexto, str):
         contexto = ast.literal_eval(contexto)
 
-    # Descripciones semánticas
-    mood_text = ". ".join(
+    mood_text = " ".join(
         [MOOD_DESCRIPTIONS.get(m, "") for m in mood]
     )
 
-    genre_text = ". ".join(
+    genre_text = " ".join(
         [GENRE_DESCRIPTIONS.get(g, "") for g in genero]
     )
 
-    context_text = ". ".join(
+    context_text = " ".join(
         [CONTEXT_DESCRIPTIONS.get(c, "") for c in contexto]
     )
 
-    # Features numéricas → lenguaje humano
     energia_text = level_text(
         energia,
-        "calm and low-energy",
-        "moderately energetic",
-        "high-energy and explosive"
+        "calm low-energy atmosphere",
+        "moderately energetic sound",
+        "explosive high-energy intensity"
     )
 
     valencia_text = level_text(
         valencia,
-        "emotionally dark and melancholic",
-        "emotionally balanced",
-        "positive and emotionally uplifting"
+        "dark melancholic emotions",
+        "emotionally balanced feeling",
+        "uplifting positive emotions"
     )
 
     danceability_text = level_text(
         danceability,
-        "not very dance-oriented",
-        "moderately danceable",
-        "highly danceable and rhythm-driven"
+        "not focused on dancing",
+        "moderately danceable rhythms",
+        "strong dance-oriented grooves"
     )
 
     instrumental_text = level_text(
         instrumentalidad,
-        "focused mainly on vocals and lyrical expression",
-        "balanced between vocals and instrumentation",
-        "strongly instrumental and atmosphere-driven"
+        "vocals and lyrical focus",
+        "balanced vocals and instrumentation",
+        "strong atmospheric instrumentation"
     )
 
     intensity_text = level_text(
         intensidad,
-        "soft and emotionally subtle",
-        "emotionally intense",
-        "extremely powerful and emotionally explosive"
+        "soft emotional subtlety",
+        "strong emotional intensity",
+        "extreme emotional explosiveness"
     )
 
-    # Texto final
-
     text = f"""
-    Emotional atmosphere:
     {mood_text}
 
-    Musical style:
     {genre_text}
 
-    Perfect context:
     {context_text}
 
-    The track feels {energia_text},
-    {valencia_text},
-    and {danceability_text}.
-
-    It is {instrumental_text}
-    and feels {intensity_text}.
+    {energia_text}.
+    {valencia_text}.
+    {danceability_text}.
+    {instrumental_text}.
+    {intensity_text}.
     """
 
     return " ".join(text.split())
