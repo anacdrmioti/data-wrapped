@@ -11,6 +11,12 @@ from karaoke.karaoke_ui import render_karaoke
 
 import pandas as pd
 
+def goto(page: str, **kwargs):
+    """Navigate to a page and optionally set extra session state."""
+    for k, v in kwargs.items():
+        st.session_state[k] = v
+    st.session_state.pagina = page
+    st.rerun()
 
 if "pagina" not in st.session_state:
     st.session_state.pagina = "inicio"
@@ -36,6 +42,7 @@ if st.session_state.pagina == "inicio":
             st.warning("Completa todos los campos ⚠️")
 
 # ------------------ PANTALLA APP ------------------
+
 elif st.session_state.pagina == "app":
 
     if "data_procesada" not in st.session_state:
@@ -56,32 +63,24 @@ elif st.session_state.pagina == "app":
 
     st.markdown(f"## Bienvenido, {st.session_state.nombre} 🎧")
 
-    st.markdown("### ¿Qué quieres hacer?")
+    st.markdown("### Elige una experiencia para comenzar.")
 
-    col1, col2 = st.columns(2)
-    col3, col4 = st.columns(2)
+    menu = [
+        ("📊 Wrapped", "Tus métricas, artistas y canciones favoritas.", "wrapped_config"),
+        ("🎯 Recomendador", "Playlists basadas en tu historial y tu mood.", "recomendadores_config"),
+        ("🤖 Chatbot", "Pregunta lo que quieras sobre tus escuchas.", "chatbot"),
+        ("🎤 Karaoke", "Canta cualquier tema con letra sincronizada.", "karaoke"),
+    ]
 
-    with col1:
-        if st.button("📊 Wrapped", use_container_width=True):
-            st.session_state.pagina = "wrapped_config"
-            st.rerun() 
-
-    with col2:
-        if st.button("🎯 Recomendador", use_container_width=True):
-            st.session_state.pagina = "recomendadores_config"
-            st.rerun()
-
-
-    with col3:
-        if st.button("🤖 Chatbot", use_container_width=True):
-            st.session_state.pagina = "chatbot"
-            st.rerun()
-
-    with col4:
-        if st.button("🎤 Karaoke", use_container_width=True):
-            st.session_state.pagina = "karaoke"
-            st.rerun()
-
+    cols = st.columns(2, gap="large")
+    for i, (title, desc, target) in enumerate(menu):
+        with cols[i % 2]:
+            with st.container(border=True):
+                st.markdown(f"### {title}")
+                st.caption(desc)
+                if st.button(f"Abrir {title.split(' ', 1)[1]}", key=f"menu_{target}",
+                             use_container_width=True):
+                    goto(target)
 
 # ------------------ PANTALLA WRAPPED CONFIG ------------------
 elif st.session_state.pagina == "wrapped_config":
