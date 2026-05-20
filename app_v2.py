@@ -7,6 +7,7 @@ from recomendador.codificador_canciones import song_to_text
 from wrapped.Wrapped_artistas_def import render_artistas_wrapped
 from wrapped.Wrapped_metricasgral import render_metricas_generales
 from wrapped.Wrapped_canciones_def import render_canciones_wrapped
+from wrapped.Wrapped_generos_def import render_generos_wrapped
 from karaoke.karaoke_ui import render_karaoke
 
 import pandas as pd
@@ -627,7 +628,6 @@ elif st.session_state.pagina == "wrapped":
 
 
     if st.session_state.seccion_wrapped == "General":
-
         render_metricas_generales(
             st.session_state.df_usuarios_resumen,
             st.session_state.df_pref_periodo,
@@ -638,7 +638,6 @@ elif st.session_state.pagina == "wrapped":
         )
 
     elif st.session_state.seccion_wrapped == "Artistas":
-        st.markdown("## 🎤 Métricas de Artistas")
         render_artistas_wrapped(
             st.session_state.df_artistas,
             st.session_state.df_escuchas)
@@ -650,7 +649,9 @@ elif st.session_state.pagina == "wrapped":
         )
 
     elif st.session_state.seccion_wrapped == "Generos":
-        st.markdown("## 🎼 Métricas de Géneros")
+        render_generos_wrapped(
+            st.session_state.df_usuario_track
+        )
 
     elif st.session_state.seccion_wrapped == "Tipo_oyente":
         st.markdown("## 🎯 Tipo de oyente")
