@@ -650,7 +650,7 @@ elif st.session_state.pagina == "wrapped":
 
     elif st.session_state.seccion_wrapped == "Generos":
         render_generos_wrapped(
-            st.session_state.df_usuario_track
+            st.session_state.df_tracks
         )
 
     elif st.session_state.seccion_wrapped == "Tipo_oyente":
