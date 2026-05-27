@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 .env
-data/*.csv
+catboost_info/
+data/

@@ -729,7 +729,8 @@ elif st.session_state.pagina == "recomendador_personal":
             ]
 
             st.session_state.df_tracks_recomendador = construir_tabla_tracks(df_filtrado)
-            st.write("Tabla de tracks generada ✅")
+            st.session_state.df_escuchas_recomendador = construir_tabla_escuchas(df_filtrado)
+            st.write("Tabla de tracks y escuchas generada ✅")
 
             path_canciones_clasificadas = "data/canciones_clasificadas.csv"
             st.session_state.df_embeddings_canciones = generador_embeddings_canciones(st.session_state.df_tracks_recomendador, path_canciones_clasificadas)
@@ -876,6 +877,7 @@ elif st.session_state.pagina == "recomendador_personal":
                 query,
                 idioma_usuario,
                 st.session_state.df_tracks_recomendador,
+                st.session_state.df_escuchas_recomendador,
                 st.session_state.df_embeddings_canciones
             )
 

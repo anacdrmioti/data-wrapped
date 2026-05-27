@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -62,7 +63,16 @@ def generador_embeddings_canciones(df_track, path_csv):
 
     return df[["nombre_cancion", "nombre_artista", "embedding", "idioma"]]
 
-def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_embeddings_canciones):
+
+def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_escuchas, df_embeddings_canciones):
+
+    from recomendador.clasificador import clasificacion_skip_2
+
+    canciones_clasificadas = pd.read_csv("data/canciones_clasificadas.csv")
+    df_tracks = clasificacion_skip_2(df_tracks, df_escuchas, canciones_clasificadas)
+
+    print(df_tracks.head(5))
+    print(df_tracks["proba_skip"].head(20))
 
     # Primero, vamos a calcular el embedding del usuario basado en sus preferencias
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -98,8 +108,10 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_embedd
         0.5 * df["score_medio"] +
         0.2 * df["recencia_score"] +
         0.2 * np.log(df["reproducciones_totales"] + 1) +
-        0.1 * df["no_skip"]
+        0.1 * df["no_skip"] 
     )
+
+    df["peso"] = df["peso"]*(1-df["proba_skip"])
 
     # Agregamos a df el embedding y quitamos posibles canciones repetidas o que no tengan embedding definido:
 
@@ -130,8 +142,8 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_embedd
     # Y por tanto ahora el embedding del usuario en este momento va a ser el embedding del historico + query embedding
 
     embedding_final = (
-        0 * embedding_usuario_historico
-        + 1 * query_embedding
+        0.2 * embedding_usuario_historico
+        + 0.8 * query_embedding
     )
 
     # Y este ya si que lo comparamos contra toda la base de datos:
@@ -153,27 +165,3 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_embedd
     ).head(5)
 
     return recomendaciones[["nombre_cancion", "nombre_artista", "score_recomendacion"]]
-
-
-def convertir_preferencias_a_embeddings(df_pref_contexto_track):
-
-    df = df_pref_contexto_track.copy()
-
-    # Para cada usuario, vamos a calcular la media de sus preferencias en cada contexto. 
-    # Esto nos dará una idea de qué contextos prefiere cada usuario.
-
-    features_contexto = [
-        "pref_escuchar_solo",
-        "pref_escuchar_con_amigos",
-        "pref_escuchar_en_fiesta",
-        "pref_escuchar_en_coche",
-        "pref_escuchar_en_gym",
-        "pref_escuchar_para_relajarse"
-    ]
-
-    X = df[features_contexto]
-
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    return X_scaled, scaler
