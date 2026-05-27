@@ -101,7 +101,7 @@ h1, h2, h3, h4 {
 # ─────────────────────────────────────────────
 # FUNCIÓN
 # ─────────────────────────────────────────────
-def render_generos_wrapped(df_usuario_track):
+def render_generos_wrapped(df_usuario_track, df_escuchas):
 
     st.markdown(_CSS, unsafe_allow_html=True)
 
@@ -112,9 +112,7 @@ def render_generos_wrapped(df_usuario_track):
     # ─────────────────────────────────────────────
     # CARGA DATA CLASIFICADA
     # ─────────────────────────────────────────────
-    df_generos = pd.read_csv(
-        r"C:\Users\elena\Desktop\Master\TFM\canciones_clasificadas_miguel.csv"
-    )
+    df_generos = pd.read_csv("data/canciones_clasificadas.csv")
 
     # ─────────────────────────────────────────────
     # CLAVE MERGE
@@ -277,46 +275,147 @@ def render_generos_wrapped(df_usuario_track):
 
 
     # ─────────────────────────────────────────────
-    # 6. ESTACIONES (VISUAL)
+    # 6. ESTACIONES MUSICALES REALES
     # ─────────────────────────────────────────────
-    st.markdown("## 🌦️ Tu año por estaciones")
+    st.markdown("## 🌦️ Tus estaciones musicales")
 
     st.markdown("""
     <div class="section-sub">
-    Tu música cambia con el tiempo: cada estación tiene su propio sonido.
+    Cada estación tiene un sonido distinto en tu historial.
+    Este fue tu género dominante en cada época del año.
     </div>
     """, unsafe_allow_html=True)
 
-    # simulación simple (si no tienes fechas aún)
-    estaciones = {
-        "🌸 Primavera": "Pop, indie, sonidos suaves",
-        "☀️ Verano": "Reggaeton, urbano, hits",
-        "🍂 Otoño": "Rock, indie melancólico",
-        "❄️ Invierno": "Baladas, acústico, chill"
+    # =====================================================
+    # MERGE ESCUCHAS + GENEROS
+    # =====================================================
+
+    df_estaciones = df_escuchas.merge(
+        df_generos,
+        on=["nombre_cancion", "nombre_artista"],
+        how="left"
+    )
+
+    df_estaciones["fecha"] = pd.to_datetime(df_estaciones["fecha"], errors="coerce")
+
+    def obtener_estacion(mes):
+        if mes in [12, 1, 2]:
+            return "Invierno"
+        elif mes in [3, 4, 5]:
+            return "Primavera"
+        elif mes in [6, 7, 8]:
+            return "Verano"
+        else:
+            return "Otoño"
+
+    df_estaciones["mes"] = df_estaciones["fecha"].dt.month
+    df_estaciones["estacion"] = df_estaciones["mes"].apply(obtener_estacion)
+
+    # limpiar nulos
+    df_estaciones = df_estaciones.dropna(
+        subset=["estacion", "genero"]
+    )
+
+    # =====================================================
+    # PESO
+    # =====================================================
+
+    peso_col = "minutos_reproducidos"
+
+    # =====================================================
+    # TOP GENERO POR ESTACION
+    # =====================================================
+
+    ranking = (
+        df_estaciones
+        .groupby(["estacion", "genero"])[peso_col]
+        .sum()
+        .reset_index()
+    )
+
+    idx = ranking.groupby("estacion")[peso_col].idxmax()
+
+    top_estaciones = ranking.loc[idx]
+
+    # =====================================================
+    # DESCRIPCIONES
+    # =====================================================
+
+    descripciones = {
+        "Primavera": "Tu época más fresca y equilibrada.",
+        "Verano": "Aquí aparece tu lado más energético.",
+        "Otoño": "Momentos más emocionales y nostálgicos.",
+        "Invierno": "Tu versión más introspectiva y chill."
     }
+
+    emojis = {
+        "Primavera": "🌸",
+        "Verano": "☀️",
+        "Otoño": "🍂",
+        "Invierno": "❄️"
+    }
+
+    import streamlit.components.v1 as components
+
+    # =====================================================
+    # RENDER
+    # =====================================================
 
     col1, col2 = st.columns(2)
 
-    items = list(estaciones.items())
+    cards = top_estaciones.to_dict("records")
 
-    with col1:
-        for k, v in items[:2]:
-            st.markdown(f"""
-            <div class="genre-card">
-                <div class="genre-name">{k}</div>
-                <div style="color:#B3B3B3; margin-top:6px; font-size:0.85rem;">
-                    {v}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    for i, row in enumerate(cards):
 
-    with col2:
-        for k, v in items[2:]:
-            st.markdown(f"""
-            <div class="genre-card">
-                <div class="genre-name">{k}</div>
-                <div style="color:#B3B3B3; margin-top:6px; font-size:0.85rem;">
-                    {v}
-                </div>
+        estacion = row["estacion"]
+
+        card_html = f"""
+        <div style="
+            background: rgba(255,255,255,0.04);
+            border:1px solid rgba(255,255,255,0.08);
+            padding:18px;
+            border-radius:18px;
+            margin-bottom:14px;
+            color:white;
+            font-family: Arial;
+        ">
+
+            <div style="
+                font-size:22px;
+                font-weight:900;
+                color:#1DB954;
+            ">
+                {emojis.get(estacion, "🎵")} {estacion}
             </div>
-            """, unsafe_allow_html=True)
+
+            <div style="
+                font-size:20px;
+                font-weight:800;
+                margin-top:10px;
+                color:white;
+            ">
+                🎧 {row["genero"]}
+            </div>
+
+            <div style="
+                color:#B3B3B3;
+                margin-top:8px;
+            ">
+                {int(row[peso_col]):,} minutos escuchados
+            </div>
+
+            <div style="
+                margin-top:10px;
+                color:#cfcfcf;
+                line-height:1.5;
+            ">
+                {descripciones.get(estacion, "")}
+            </div>
+
+        </div>
+        """
+
+        if i < 2:
+            components.html(card_html, scrolling = False, height=180)
+        else:
+            components.html(card_html, scrolling = False, height=180)

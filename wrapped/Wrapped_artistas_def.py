@@ -269,7 +269,7 @@ def _descubrimiento_por_mes(df_escuchas: pd.DataFrame) -> pd.DataFrame:
 def render_artistas_wrapped(df_artistas: pd.DataFrame, df_escuchas: pd.DataFrame) -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
-    top10 = _top_artistas(df_artistas, 10)
+    top10 = _top_artistas(df_artistas, 5)
     if top10.empty:
         st.info("No hay datos de artistas disponibles.")
         return
@@ -282,7 +282,6 @@ def render_artistas_wrapped(df_artistas: pd.DataFrame, df_escuchas: pd.DataFrame
         st.error("Faltan columnas necesarias en df_artistas.")
         return
 
-    st.header("🎤 Artistas")
     st.subheader("👑 Top artista")
 
     top1 = top10.iloc[0]

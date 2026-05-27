@@ -5,3 +5,7 @@ python-dotenv
 syncedlyrics
 plotly
 google-api-python-client
+sentence-transformers
+streamlit-audiorecorder
+pydub
+torchvision

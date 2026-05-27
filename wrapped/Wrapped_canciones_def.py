@@ -171,7 +171,7 @@ def render_canciones_wrapped(df_tracks, df_escuchas):
     max_reps = float(top[col_reps].max()) if len(top) else 1
 
     top3 = top.head(3)
-    rest = top.iloc[3:10]
+    rest = top.iloc[3:6]
 
     podium_html = '<div class="podium-wrap">'
     podium_classes = ["silver", "gold", "bronze"]
@@ -192,7 +192,7 @@ def render_canciones_wrapped(df_tracks, df_escuchas):
     podium_html += "</div>"
     st.html(podium_html)
 
-    st.subheader("📋 Del 4 al 10")
+    st.subheader("📋 Del 4 al 6")
 
     list_html = ""
     for i, (_, row) in enumerate(rest.iterrows(), 4):
@@ -217,7 +217,7 @@ def render_canciones_wrapped(df_tracks, df_escuchas):
         """
     st.html(list_html)
 
-    st.subheader("⭐ Canción del año")
+    st.subheader("⭐ Canción del momento")
 
     if col_score and col_score in df_tracks.columns and not df_tracks[col_score].isna().all():
         best = df_tracks.sort_values(col_score, ascending=False).iloc[0]
@@ -228,7 +228,7 @@ def render_canciones_wrapped(df_tracks, df_escuchas):
     <div class="big-fact">
         <div class="big-fact-kicker">Tu hit del año</div>
         <div class="big-fact-title">{best.get(col_name, "Sin nombre")}</div>
-        <div class="big-fact-sub">🎧 Tu canción más especial del año</div>
+        <div class="big-fact-sub">🎧 Tu canción más especial</div>
     </div>
     """, unsafe_allow_html=True)
 

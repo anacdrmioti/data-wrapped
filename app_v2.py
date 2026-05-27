@@ -8,6 +8,7 @@ from wrapped.Wrapped_artistas_def import render_artistas_wrapped
 from wrapped.Wrapped_metricasgral import render_metricas_generales
 from wrapped.Wrapped_canciones_def import render_canciones_wrapped
 from wrapped.Wrapped_generos_def import render_generos_wrapped
+from wrapped.Wrapped_tipo_oyente_2 import render_tipos_oyente
 from karaoke.karaoke_ui import render_karaoke
 
 import pandas as pd
@@ -650,12 +651,13 @@ elif st.session_state.pagina == "wrapped":
 
     elif st.session_state.seccion_wrapped == "Generos":
         render_generos_wrapped(
+            st.session_state.df_tracks,
+            st.session_state.df_escuchas
+        )
+    elif st.session_state.seccion_wrapped == "Tipo_oyente":
+        render_tipos_oyente(
             st.session_state.df_tracks
         )
-
-    elif st.session_state.seccion_wrapped == "Tipo_oyente":
-        st.markdown("## 🎯 Tipo de oyente")
-
 elif st.session_state.pagina == "recomendadores_config":
 
     df = st.session_state.data_procesada

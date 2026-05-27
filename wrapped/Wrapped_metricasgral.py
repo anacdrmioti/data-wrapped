@@ -366,8 +366,8 @@ def render_metricas_generales(
     st.markdown(f"""
     <div class="hero-wrap">
         <div class="hero-year">¡Bienvenido!</div>
-        <div class="hero-title">Tu año en música</div>
-        <div class="hero-sub">Has vivido este año con muchísimo soundtrack.</div>
+        <div class="hero-title">Descubre cómo ha sido tu vida en música</div>
+        <div class="hero-sub">Has vivido este periodo con muchísimo soundtrack.</div>
     </div>
     """, unsafe_allow_html=True)
 

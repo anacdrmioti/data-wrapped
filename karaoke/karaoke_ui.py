@@ -3,9 +3,14 @@ import json
 import streamlit as st
 import syncedlyrics
 from googleapiclient.discovery import build
+import io
+import os
+from dotenv import load_dotenv
 
-YOUTUBE_API_KEY = "AIzaSyDZgLBFuQeqBrEDc4OQrjFGkdGkuJNW73o"
+load_dotenv()
 
+
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 def _buscar_video_api(query):
     try:
