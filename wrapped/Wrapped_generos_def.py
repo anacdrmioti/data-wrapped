@@ -160,7 +160,7 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
         <div class="big-fact-kicker">Tu ADN sonoro</div>
         <div class="big-fact-title">🎧 {top_genre["genero"]}</div>
         <div class="big-fact-sub">
-            Este género define tu año con <b>{int(top_genre["peso"]):,}</b> escuchas.
+            Este género te define con <b>{int(top_genre["peso"]):,}</b> escuchas.
         </div>
     </div>
     """, unsafe_allow_html=True)
