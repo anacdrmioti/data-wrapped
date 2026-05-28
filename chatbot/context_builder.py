@@ -19,8 +19,6 @@ from chatbot.genre_enricher import enriquecer_con_generos
 # CARGA DEL CSV DE GÉNEROS (se hace una sola vez al importar)
 # ─────────────────────────────────────────────────────────────
 
-# Ruta al CSV de géneros. Está en la carpeta data/ del proyecto.
-# Si lo mueves, cambia esta ruta.
 _RUTA_CSV_GENEROS = "data/canciones_clasificadas.csv"
 
 # Variable global: se carga una vez y se reutiliza en todas las llamadas

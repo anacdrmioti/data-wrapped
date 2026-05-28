@@ -69,9 +69,9 @@ def transcribir_audio(audio_bytes: bytes) -> str:
         transcripcion = client.audio.transcriptions.create(
             model="whisper-large-v3-turbo",
             file=("audio.wav", audio_buffer, "audio/wav"),
-            language="es",           # forzar español mejora precisión de nombres
+            language="es",           # forzar español 
             response_format="text",  # devuelve string directamente, sin JSON
-            temperature=0.0,         # más determinista = mejor transcripción literal
+            temperature=0.0,         # más determinista, mejor transcripción literal
         )
 
         # Con response_format="text" Groq devuelve el string directamente
