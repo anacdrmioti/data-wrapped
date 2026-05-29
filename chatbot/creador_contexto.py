@@ -1,27 +1,15 @@
-"""
-context_builder.py
-------------------
-Construye el contexto textual que se envía al LLM.
-
-Versión mejorada: integra información de géneros, moods y
-características musicales desde el CSV externo.
-"""
-
 import pandas as pd
 from datetime import datetime
 
 # Importamos los módulos de géneros que hemos creado
-from chatbot.genre_loader import cargar_csv_generos
-from chatbot.genre_enricher import enriquecer_con_generos
+from chatbot.cargar_generos import cargar_csv_generos
+from chatbot.tratamiento_generos import enriquecer_con_generos
 
 
-# ─────────────────────────────────────────────────────────────
 # CARGA DEL CSV DE GÉNEROS (se hace una sola vez al importar)
-# ─────────────────────────────────────────────────────────────
 
 _RUTA_CSV_GENEROS = "data/canciones_clasificadas.csv"
 
-# Variable global: se carga una vez y se reutiliza en todas las llamadas
 _df_generos = None
 
 
@@ -91,7 +79,7 @@ def build_user_context(data: dict, persona_id: str,
 
     context_parts = []
 
-    # ── 1. Perfil general del usuario ──────────────────────────
+    #  1. Perfil general del usuario 
     if "usuarios_resumen" in data:
         df = data["usuarios_resumen"]
         usuario = df[df["persona_id"] == persona_id]
@@ -108,7 +96,7 @@ def build_user_context(data: dict, persona_id: str,
 - Porcentaje de canciones completadas: {u['pct_fin_natural']*100:.1f}%
 - Porcentaje de canciones saltadas: {u['pct_saltada']*100:.1f}%""")
 
-    # ── 2. Top 10 artistas por minutos ──────────────────────────
+    # 2. Top 10 artistas por minutos 
     if "artistas" in data:
         df = data["artistas"]
         top = (df[df["persona_id"] == persona_id]
@@ -121,7 +109,7 @@ def build_user_context(data: dict, persona_id: str,
             )
             context_parts.append(f"TOP 10 ARTISTAS POR MINUTOS ESCUCHADOS:\n{lista}")
 
-    # ── 3. Top 10 canciones por score de interés ────────────────
+    #  3. Top 10 canciones por score de interés
     if "usuario_track" in data:
         df = data["usuario_track"]
         top = (df[df["persona_id"] == persona_id]
@@ -134,7 +122,7 @@ def build_user_context(data: dict, persona_id: str,
             )
             context_parts.append(f"TOP 10 CANCIONES CON MAYOR INTERÉS:\n{lista}")
 
-    # ── 4. Hábito por periodo del día actual ────────────────────
+    #  4. Hábito por periodo del día actual 
     if "preferencias_periodo_dia" in data:
         df = data["preferencias_periodo_dia"]
         periodo_actual = _hora_a_periodo(hora_actual)
@@ -159,7 +147,7 @@ def build_user_context(data: dict, persona_id: str,
                 f"(score medio: {d['score_medio']:.3f})"
             )
 
-    # ── 6. Géneros, moods y características musicales ───────────
+    # 6. Géneros, moods y características musicales 
     # Esta es la parte nueva: cruzamos con el CSV externo
     if "usuario_track" in data:
         df_generos = _get_df_generos()

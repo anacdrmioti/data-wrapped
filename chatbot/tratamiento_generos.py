@@ -1,15 +1,3 @@
-"""
-genre_enricher.py
------------------
-Cruza los datos procesados del usuario (tabla usuario_track)
-con el CSV de géneros/mood/características.
-
-Genera un resumen textual de géneros, moods y características
-que se añade al contexto que recibe el LLM.
-
-Este módulo se usa desde context_builder.py.
-"""
-
 import pandas as pd
 from collections import Counter
 

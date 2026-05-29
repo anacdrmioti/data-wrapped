@@ -4,7 +4,7 @@ import pandas as pd
 import hashlib
 from datetime import datetime
 
-from chatbot.context_builder import build_user_context, build_multi_user_context
+from chatbot.creador_contexto import build_user_context, build_multi_user_context
 from chatbot.llm_client import ask_groq, transcribir_audio
 from chatbot.prompts import SYSTEM_PROMPT
 
