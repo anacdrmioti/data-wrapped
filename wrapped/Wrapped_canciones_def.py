@@ -10,6 +10,8 @@ def safe_col(df, *cols):
             return c
     return None
 
+# CSS 
+
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap');
@@ -144,6 +146,7 @@ html, body, [class*="css"] {
 }
 </style>
 """
+# Función render principal
 
 def render_canciones_wrapped(df_tracks, df_escuchas):
 
