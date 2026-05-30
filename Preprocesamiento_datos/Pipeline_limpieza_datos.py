@@ -1,5 +1,5 @@
-from Preprocesamiento_datos.Carga_datos import cargar_datos
-from Preprocesamiento_datos.Limpieza_datos import limpieza_datos
+from preprocesamiento_datos.carga_datos import cargar_datos
+from preprocesamiento_datos.limpieza_datos import limpieza_datos
 
 def pipeline_carga_y_limpieza_datos(uploaded_file, nombre):
     """

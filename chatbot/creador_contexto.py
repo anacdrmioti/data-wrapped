@@ -2,14 +2,8 @@ import pandas as pd
 from datetime import datetime
 
 # Importamos los módulos de géneros que hemos creado
-<<<<<<< HEAD:chatbot/context_builder.py
-from Chatbot.genre_loader import cargar_csv_generos
-from Chatbot.genre_enricher import enriquecer_con_generos
-=======
 from chatbot.cargar_generos import cargar_csv_generos
 from chatbot.tratamiento_generos import enriquecer_con_generos
->>>>>>> 282143d0982ba0183845c293b31505a12ef33d92:chatbot/creador_contexto.py
-
 
 # CARGA DEL CSV DE GÉNEROS (se hace una sola vez al importar)
 

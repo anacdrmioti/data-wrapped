@@ -24,8 +24,8 @@ logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
-from Recomendador.Codificador_canciones import song_to_text
-from Recomendador.Clasificador import clasificacion_skip
+from recomendador.codificador_canciones import song_to_text
+from recomendador.clasificador import clasificacion_skip
 
 
 def generador_embeddings_canciones(df_track, path_csv):
