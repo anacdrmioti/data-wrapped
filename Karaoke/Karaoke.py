@@ -9,10 +9,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 def _buscar_video_api(query):
+    """
+    Busca un vídeo en YouTube usando la API oficial y devuelve su videoId.
+    """
     try:
         youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
         request = youtube.search().list(q=query, part='snippet', maxResults=1, type='video')
@@ -23,8 +25,13 @@ def _buscar_video_api(query):
     except:
         return None
 
-
 def render_karaoke(cancion, artista):
+    """
+    Simula un reproductor de karaoke en Streamlit:
+    - Busca un vídeo en YouTube relacionado con la canción
+    - Obtiene letras sincronizadas
+    - Muestra vídeo + sincronización en tiempo real
+    """
     if cancion and artista:
         with st.spinner("📡 Sincronizando escenario..."):
             video_id = _buscar_video_api(f"{cancion} {artista} karaoke instrumental")

@@ -1,4 +1,26 @@
+"""
+Módulo de creación de descripciones de canciones.
 
+Este código convierte las características de una canción
+(mood, género, contexto y variables numéricas)
+en un texto en lenguaje natural.
+
+El objetivo es poder representar cada canción como una frase
+que luego se puede transformar en embeddings para
+calcular similitud entre canciones o hacer recomendaciones.
+
+Incluye:
+
+- Diccionarios que traducen etiquetas (mood, género, contexto)
+  a descripciones en inglés más ricas.
+- Una función (level_text) que convierte valores numéricos
+  en descripciones tipo “bajo”, “medio” o “alto”.
+- Una función principal (song_to_text) que combina toda la
+  información y genera un único texto descriptivo de la canción.
+
+Este texto final se utiliza en modelos de NLP para comparar
+canciones de forma semántica.
+"""
 
 CONTEXT_DESCRIPTIONS = {
 

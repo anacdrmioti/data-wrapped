@@ -9,3 +9,4 @@ sentence-transformers
 streamlit-audiorecorder
 pydub
 torchvision
+catboost

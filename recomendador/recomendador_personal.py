@@ -1,3 +1,5 @@
+# Importamos las librerias:
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -7,6 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from sentence_transformers import SentenceTransformer
 import ast
+
 
 # Para quitar los warnings:
 import logging
@@ -21,10 +24,24 @@ logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
-from recomendador.codificador_canciones import song_to_text
+from Recomendador.Codificador_canciones import song_to_text
+from Recomendador.Clasificador import clasificacion_skip
 
 
 def generador_embeddings_canciones(df_track, path_csv):
+
+    """
+    Crea embeddings (vectores) de canciones para poder compararlas.
+
+    Qué hace:
+    - Carga las canciones desde un CSV
+    - Se queda solo con las canciones que están en df_track
+    - Convierte cada canción en un texto usando song_to_text (definido en Codificador_canciones)
+    - Usa un modelo de SentenceTransformers para pasar ese texto a un vector (embedding)
+    - Devuelve cada canción con su embedding
+
+    Esto sirve para comparar canciones y hacer recomendaciones.
+    """
 
     df_catalogo = pd.read_csv(path_csv)
 
@@ -66,22 +83,45 @@ def generador_embeddings_canciones(df_track, path_csv):
 
 def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_escuchas, df_embeddings_canciones):
 
-    from recomendador.clasificador import clasificacion_skip_2
+    """
+    Recomendador de canciones basado en el historial del usuario y una búsqueda (query).
 
+    Qué hace:
+    - Entrena/aplica un modelo para estimar qué canciones el usuario puede saltarse (skip) basado en el contexto temporal
+    - Usa el historial de escuchas para crear un perfil del usuario
+    - Convierte la query del usuario en un embedding (vector)
+    - Combina el perfil del usuario + la query actual
+    - Busca canciones similares usando embeddings
+    - Devuelve las mejores recomendaciones
+
+    Idea:
+    ------
+    Recomienda canciones que encajen con:
+    - lo que el usuario ha escuchado antes
+    - lo que está buscando ahora
+    - evitando canciones que probablemente se salten
+
+    Retorna:
+    --------
+    DataFrame con las canciones recomendadas y su puntuación.
+    """
+
+    # Cargamos dataset con info de canciones
     canciones_clasificadas = pd.read_csv("data/canciones_clasificadas.csv")
-    df_tracks = clasificacion_skip_2(df_tracks, df_escuchas, canciones_clasificadas)
 
-    print(df_tracks.head(5))
-    print(df_tracks["proba_skip"].head(20))
+    # Entrenamos/aplicamos modelo para predecir probabilidad de skip
+    df_tracks = clasificacion_skip(df_tracks, df_escuchas, canciones_clasificadas)
 
-    # Primero, vamos a calcular el embedding del usuario basado en sus preferencias
+    # Embedding de la consulta del usuario (lo que está buscando)
     model = SentenceTransformer('all-MiniLM-L6-v2')
     query_embedding = model.encode([query])[0]
 
+    # Filtramos canciones según idioma del usuario
     df_filtrado = df_embeddings_canciones[
         df_embeddings_canciones["idioma"].isin(idiomas_usuario)
     ]
 
+    # Nos quedamos solo con canciones válidas del catálogo
     df = df_tracks.copy()
     df = df.merge(
         df_filtrado[["nombre_cancion", "nombre_artista"]],
@@ -89,32 +129,29 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_escuch
         how="inner"
     )
 
-    # Sabemos que existen features que tienen que ser bajas para que la canción sea recomendada, como el porcentaje de saltada y skip temprano. 
-    # Por lo tanto, vamos a invertir estas features para que el modelo pueda aprender mejor.
-
+    # Invertimos métricas de skip (menos skip = mejor)
     df["no_skip"] = 1 - df_tracks["pct_saltada"]
     df["no_skip_temprano"] = 1 - df_tracks["pct_skip_temprano"]
 
-    # Y también queremos que de más pesos a aquellas canciones que se han escuchado recientemente:
-
+    # Calculamos recencia (cuánto hace que se escuchó cada canción)
     df["ultima_escucha"] = pd.to_datetime(df["ultima_escucha"]).dt.tz_localize(None)
     df["recencia"] = (pd.Timestamp.now() - df["ultima_escucha"]).dt.days
-    # Más peso a las canciones que se han escuchado más recientemente (0 días → 1.0, 30 días → ~0.37, 100 días → casi 0)
+
+    # Convertimos recencia en un score (más reciente = más peso)
     df["recencia_score"] = np.exp(-df["recencia"] / 30)
 
-    # Peso para definir al usuario
-
+    # Construimos un peso que representa la importancia de cada canción en el usuario
     df["peso"] = (
-        0.5 * df["score_medio"] +
-        0.2 * df["recencia_score"] +
-        0.2 * np.log(df["reproducciones_totales"] + 1) +
-        0.1 * df["no_skip"] 
+        0.5 * df["score_medio"] +                  # gusto general
+        0.2 * df["recencia_score"] +              # recientes
+        0.2 * np.log(df["reproducciones_totales"] + 1) +  # frecuencia
+        0.1 * df["no_skip"]                       # calidad (no skip)
     )
 
-    df["peso"] = df["peso"]*(1-df["proba_skip"])
+    # Penalizamos canciones con alta probabilidad de skip
+    df["peso"] = df["peso"] * (1 - df["proba_skip"])
 
-    # Agregamos a df el embedding y quitamos posibles canciones repetidas o que no tengan embedding definido:
-
+    # Añadimos embeddings de las canciones
     df = df.merge(
         df_embeddings_canciones[
             ["nombre_cancion", "nombre_artista", "embedding"]
@@ -123,34 +160,27 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_escuch
         how="left"
     )
 
-    df = df.drop_duplicates(
-        subset=["nombre_cancion", "nombre_artista"]
-    ).copy()
-
+    # Eliminamos duplicados y canciones sin embedding
+    df = df.drop_duplicates(subset=["nombre_cancion", "nombre_artista"]).copy()
     df = df[~df["embedding"].isna()]
 
-    # Y ahora ya generamos el embedding del usuario pero simplemente en base al historial
-
+    # Convertimos embeddings a matriz
     embeddings = np.vstack(df["embedding"].values)
 
+    # Creamos embedding del usuario basado en su historial (ponderado)
     embedding_usuario_historico = np.sum(
-        df["peso"].values.reshape(-1,1) * embeddings,
+        df["peso"].values.reshape(-1, 1) * embeddings,
         axis=0
     ) / np.sum(df["peso"])
 
-    
-    # Y por tanto ahora el embedding del usuario en este momento va a ser el embedding del historico + query embedding
-
+    # Mezclamos historial + mood del usuario (query)
     embedding_final = (
-        0.2 * embedding_usuario_historico
-        + 0.8 * query_embedding
+        0.2 * embedding_usuario_historico +
+        0.8 * query_embedding
     )
 
-    # Y este ya si que lo comparamos contra toda la base de datos:
-
-    all_embeddings = np.vstack(
-        df_filtrado["embedding"].values
-    )
+    # Calculamos similitud entre usuario y todas las canciones
+    all_embeddings = np.vstack(df_filtrado["embedding"].values)
 
     similaridades = cosine_similarity(
         all_embeddings,
@@ -159,6 +189,7 @@ def recomendador_historico_escuchas(query, idiomas_usuario, df_tracks, df_escuch
 
     df_filtrado["score_recomendacion"] = similaridades
 
+    # Ordenamos y nos quedamos con las mejores canciones
     recomendaciones = df_filtrado.sort_values(
         "score_recomendacion",
         ascending=False
