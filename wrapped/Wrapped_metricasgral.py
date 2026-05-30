@@ -1,27 +1,9 @@
-"""
-wrapped_metricas_generales.py
-─────────────────────────────
-Versión visual mejorada y segura del apartado "Métricas Generales"
-del Spotify Wrapped.
-
-✔ Diseño más moderno
-✔ Menos gráficos estadísticos
-✔ Más storytelling
-✔ Cards visuales y divertidas
-✔ Compatible con Streamlit
-✔ Sin HTML roto
-✔ Misma paleta del apartado Artistas
-✔ Sin errores por columnas inexistentes
-"""
-
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
-# ─────────────────────────────────────────────────────────────
-# PALETA
-# ─────────────────────────────────────────────────────────────
+# Paleta de colores
 
 GREEN        = "#1DB954"
 GREEN_LIGHT  = "#1ED760"
@@ -40,9 +22,7 @@ EMOJI_PERIODO = {
     "madrugada": "🌃"
 }
 
-# ─────────────────────────────────────────────────────────────
 # CSS
-# ─────────────────────────────────────────────────────────────
 
 _CSS = """
 <style>
@@ -297,9 +277,6 @@ html, body, [class*="css"] {
 </style>
 """
 
-# ─────────────────────────────────────────────────────────────
-# AUXILIARES
-# ─────────────────────────────────────────────────────────────
 
 def _sec(title):
     st.markdown(
@@ -326,9 +303,7 @@ def _fact(emoji, title, value, sub=""):
     </div>
     """
 
-# ─────────────────────────────────────────────────────────────
-# RENDER
-# ─────────────────────────────────────────────────────────────
+# Función render principal
 
 def render_metricas_generales(
     df_usuarios_resumen,
@@ -359,9 +334,7 @@ def render_metricas_generales(
     artistas = int(safe(resumen.get("artistas_unicos", 0)))
     tracks = int(safe(resumen.get("tracks_unicos", 0)))
 
-    # ─────────────────────────────────────────
-    # HERO (FIX: todo en un solo markdown)
-    # ─────────────────────────────────────────
+    # Hero
 
     st.markdown(f"""
     <div class="hero-wrap">
@@ -371,9 +344,7 @@ def render_metricas_generales(
     </div>
     """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # MÉTRICAS
-    # ─────────────────────────────────────────
+    # Métricas generales 
 
     st.markdown("## 📊 Tus números")
 
@@ -391,9 +362,7 @@ def render_metricas_generales(
     with c4:
         st.markdown(_metric(f"{tracks:,}", "Canciones", "diferentes"), unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # TOP ARTISTA (FIX KEY ERRORS)
-    # ─────────────────────────────────────────
+    # Top artista
 
     if not df_artistas.empty and "minutos_totales" in df_artistas.columns:
 
@@ -414,9 +383,7 @@ def render_metricas_generales(
         </div>
         """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # HORAS (FIX SAFE COLUMN CHECK)
-    # ─────────────────────────────────────────
+    # Horas
 
     st.markdown("## 🕒 Tu momento más musical")
 
@@ -437,9 +404,7 @@ def render_metricas_generales(
         </div>
         """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # PERIODOS
-    # ─────────────────────────────────────────
+    # Periodo
 
     st.markdown("## 🌅 Tu ritmo musical")
 
@@ -471,9 +436,7 @@ def render_metricas_generales(
             </div>
             """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # CURIOSES
-    # ─────────────────────────────────────────
+    # Curiosidades - es un apartado de métricas un poco más originales
 
     st.markdown("## ✨ Curiosidades")
 
@@ -490,9 +453,7 @@ def render_metricas_generales(
     c3.metric("🔀 Shuffle", f"{pct_shuffle:.0f}%")
     c4.metric("⏭️ Skips", f"{pct_skip:.0f}%")
 
-    # ─────────────────────────────────────────
-    # TOP TRACKS (FIX KEY ERROR)
-    # ─────────────────────────────────────────
+    # Top canciones
 
     st.markdown("## 🎵 Canciones más repetidas")
 
@@ -516,9 +477,7 @@ def render_metricas_generales(
             </div>
             """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # FOOTER
-    # ─────────────────────────────────────────
+    # Frase del final
 
     st.markdown("""
     <div style="text-align:center;color:#666;margin-top:40px;font-size:0.8rem;">

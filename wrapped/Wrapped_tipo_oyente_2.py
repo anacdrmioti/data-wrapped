@@ -1,7 +1,5 @@
 """
-TIPOS DE OYENTE — SISTEMA DE CLASIFICACIÓN
-
-Este sistema:
+Proceso para hacer este apartado: 
 1. Une df_tracks con df_generos
 2. Calcula el perfil musical del usuario
 3. Compara ese perfil con distintos prototipos
@@ -14,9 +12,7 @@ import numpy as np
 import streamlit as st
 
 
-# =========================================================
-# FEATURES
-# =========================================================
+# Las features que se incluyen en la tabla de clasificadas:
 
 FEATURES = [
     "energia",
@@ -27,9 +23,8 @@ FEATURES = [
 ]
 
 
-# =========================================================
-# TIPOS DE OYENTE
-# =========================================================
+# Tipos de oyente
+    # Voy a asignar pesos de las features a cada tipo de oyente.
 
 TIPOS_OYENTE = {
 
@@ -115,9 +110,7 @@ TIPOS_OYENTE = {
 }
 
 
-# =========================================================
-# MERGE TRACKS + FEATURES
-# =========================================================
+# Hacer el Merge de la tabla de tracks con la de géneros
 
 df_generos = pd.read_csv("data/canciones_clasificadas.csv")
 
@@ -132,24 +125,17 @@ def preparar_dataset(df_tracks, df_generos):
     return df
 
 
-# =========================================================
-# PERFIL DEL USUARIO
-# =========================================================
+# Calcular el perfil del usuario
 
 def calcular_perfil_usuario(df):
 
     perfil = {}
 
-    # =====================================================
-    # PESOS SEGÚN REPRODUCCIONES
-    # =====================================================
+    # Pesos según reproducciones
 
     pesos = df["reproducciones_totales"].fillna(1)
 
-    # =====================================================
-    # FEATURES PONDERADAS
-    # =====================================================
-
+    # Features ponderadas
     for f in FEATURES:
 
         perfil[f] = np.average(
@@ -157,9 +143,6 @@ def calcular_perfil_usuario(df):
             weights=pesos
         )
 
-    # =====================================================
-    # DIVERSIDAD DE GÉNEROS
-    # =====================================================
 
     perfil["n_generos"] = (
         df["genero"]
@@ -167,9 +150,6 @@ def calcular_perfil_usuario(df):
         .nunique()
     )
 
-    # =====================================================
-    # ARTISTA DOMINANTE
-    # =====================================================
 
     top_artist_ratio = (
         df["nombre_artista"]
@@ -179,9 +159,6 @@ def calcular_perfil_usuario(df):
 
     perfil["top_artist_ratio"] = top_artist_ratio
 
-    # =====================================================
-    # SKIPS
-    # =====================================================
 
     if "pct_saltada" in df.columns:
 
@@ -194,9 +171,7 @@ def calcular_perfil_usuario(df):
     return perfil
 
 
-# =========================================================
-# SCORE NUMÉRICO
-# =========================================================
+# Calcular el score
 
 def score_numerico(usuario, tipo):
 
@@ -210,10 +185,6 @@ def score_numerico(usuario, tipo):
 
     return score / len(FEATURES)
 
-
-# =========================================================
-# BONUS
-# =========================================================
 
 def calcular_bonus(nombre_tipo, perfil):
 
@@ -237,9 +208,6 @@ def calcular_bonus(nombre_tipo, perfil):
     return bonus
 
 
-# =========================================================
-# CALCULAR TOP TIPOS
-# =========================================================
 
 def calcular_tipos_oyente(df):
 
@@ -270,9 +238,7 @@ def calcular_tipos_oyente(df):
     # top 3
     top3 = resultados[:3]
 
-    # =====================================================
-    # NORMALIZAR A %
-    # =====================================================
+    # Normalizar a %
 
     total = sum(x["score"] for x in top3)
 
@@ -286,9 +252,7 @@ def calcular_tipos_oyente(df):
     return top3
 
 
-# =========================================================
-# STREAMLIT
-# =========================================================
+# Función render principal
 
 def render_tipos_oyente(df_tracks):
 

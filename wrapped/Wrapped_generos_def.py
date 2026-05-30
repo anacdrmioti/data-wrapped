@@ -4,9 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
 
-# ─────────────────────────────────────────────
-# CSS GLOBAL (Wrapped Style)
-# ─────────────────────────────────────────────
+# CSS
 _CSS = """
 <style>
 
@@ -98,9 +96,8 @@ h1, h2, h3, h4 {
 </style>
 """
 
-# ─────────────────────────────────────────────
-# FUNCIÓN
-# ─────────────────────────────────────────────
+# Función Render principal
+
 def render_generos_wrapped(df_usuario_track, df_escuchas):
 
     st.markdown(_CSS, unsafe_allow_html=True)
@@ -109,14 +106,9 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
         st.warning("No hay datos")
         return
 
-    # ─────────────────────────────────────────────
-    # CARGA DATA CLASIFICADA
-    # ─────────────────────────────────────────────
+    # Cargamos los datos de las canciones clasificadas por la API
     df_generos = pd.read_csv("data/canciones_clasificadas.csv")
 
-    # ─────────────────────────────────────────────
-    # CLAVE MERGE
-    # ─────────────────────────────────────────────
     def norm(x):
         return str(x).lower().strip()
 
@@ -148,9 +140,7 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
         .sort_values("peso", ascending=False)
     )
 
-    # ─────────────────────────────────────────────
-    # 1. IDENTIDAD MUSICAL
-    # ─────────────────────────────────────────────
+    # 1. Identidad musical
     top_genre = genre_df.iloc[0]
 
     st.markdown("## 🧬 Tu identidad musical")
@@ -165,9 +155,7 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
     </div>
     """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────────
-    # 2. UNIVERSO + PODIO
-    # ─────────────────────────────────────────────
+    # 2. Universo y podio 
     st.markdown("## 🎼 Tu universo de géneros")
 
     top = genre_df.head(5)
@@ -177,9 +165,6 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
     third = top.iloc[2]
     others = top.iloc[3:5]
 
-    # ─────────────────────────────────────────────
-    # 🏆 PODIO REAL (STREAMLIT SAFE)
-    # ─────────────────────────────────────────────
     col2, col1, col3 = st.columns([1, 1.2, 1])
 
     with col1:
@@ -221,9 +206,7 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
         </div>
         """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────────
-    # 3. GÉNERO SORPRESA
-    # ─────────────────────────────────────────────
+    # 3. Género sorpresa 
     st.markdown("## 🎲 Tu género sorpresa")
 
     surprise_pool = genre_df.iloc[3:10]
@@ -240,11 +223,12 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
     """, unsafe_allow_html=True)
 
 
-    # ─────────────────────────────────────────────
-    # 5. RADAR
-    # ─────────────────────────────────────────────
+    # 4. Radar
+
     st.markdown("## 🎯 Tu perfil musical")
 
+    # Voy a poner una breve explicación de cómo leer el gráfico, ya que tiene que ser fácil de interpretar para
+        # cualquier persona
     st.markdown("""
     <div class="section-sub">
     Este gráfico resume cómo suena tu música.  
@@ -274,9 +258,8 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
         st.plotly_chart(fig2, use_container_width=True)
 
 
-    # ─────────────────────────────────────────────
-    # 6. ESTACIONES MUSICALES REALES
-    # ─────────────────────────────────────────────
+    # 6. Estaciones musicales
+
     st.markdown("## 🌦️ Tus estaciones musicales")
 
     st.markdown("""
@@ -286,10 +269,7 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
     </div>
     """, unsafe_allow_html=True)
 
-    # =====================================================
-    # MERGE ESCUCHAS + GENEROS
-    # =====================================================
-
+    # merge de la tabla escuchas con la de clasificadas géneros
     df_estaciones = df_escuchas.merge(
         df_generos,
         on=["nombre_cancion", "nombre_artista"],
@@ -316,15 +296,10 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
         subset=["estacion", "genero"]
     )
 
-    # =====================================================
-    # PESO
-    # =====================================================
-
+    # Peso
     peso_col = "minutos_reproducidos"
 
-    # =====================================================
-    # TOP GENERO POR ESTACION
-    # =====================================================
+    # Top de género para las estaciones
 
     ranking = (
         df_estaciones
@@ -337,9 +312,7 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
 
     top_estaciones = ranking.loc[idx]
 
-    # =====================================================
-    # DESCRIPCIONES
-    # =====================================================
+    # Descripciones y emojis para cada estación 
 
     descripciones = {
         "Primavera": "Tu época más fresca y equilibrada.",
@@ -357,9 +330,6 @@ def render_generos_wrapped(df_usuario_track, df_escuchas):
 
     import streamlit.components.v1 as components
 
-    # =====================================================
-    # RENDER
-    # =====================================================
 
     col1, col2 = st.columns(2)
 

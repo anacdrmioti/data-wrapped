@@ -2,7 +2,7 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 
-# ─── Paleta uniforme ─────────────────────────────────────────────────────────
+# Paleta 
 GREEN = "#1DB954"
 BLACK = "#0a0a0a"
 CARD_BG = "#111111"
@@ -18,7 +18,7 @@ MESES_ES = {
     9: "Sep.", 10: "Oct.", 11: "Nov.", 12: "Dic."
 }
 
-# ─── CSS uniforme (mismo estilo en todas las pestañas) ───────────────────────
+# CSS
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap');
@@ -182,7 +182,7 @@ html, body, [class*="css"] {
 </style>
 """
 
-# ─── Auxiliares ──────────────────────────────────────────────────────────────
+# Auxiliares
 def safe(v, default=0):
     return default if pd.isna(v) else v
 
@@ -192,7 +192,7 @@ def safe_col(df, *cols):
             return c
     return None
 
-# ─── Lógica ──────────────────────────────────────────────────────────────────
+# Funciones de wrapped artistas
 def _top_artistas(df_artistas: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     if df_artistas is None or df_artistas.empty:
         return pd.DataFrame()
@@ -215,7 +215,7 @@ def _artista_sin_skips(df_escuchas: pd.DataFrame, min_repros: int = 3):
     if df_escuchas is None or df_escuchas.empty:
         return None
     
-    # Si no tenemos columna 'saltada', usamos 'pct_saltada' si existe
+    # Porque me ha dado error en algunas personas que tienen la misma columna nombrada de diferente forma:
     saltada_col = None
     if "saltada" in df_escuchas.columns:
         saltada_col = "saltada"
@@ -242,7 +242,7 @@ def _artista_sin_skips(df_escuchas: pd.DataFrame, min_repros: int = 3):
     if df.empty:
         return None
     
-    # El artista con MENOR porcentaje de skips (idealmente 0)
+    # El artista con menor porcentaje de skips
     return df.sort_values("pct_skip", ascending=True).iloc[0]
 
 def _descubrimiento_por_mes(df_escuchas: pd.DataFrame) -> pd.DataFrame:
@@ -265,7 +265,7 @@ def _descubrimiento_por_mes(df_escuchas: pd.DataFrame) -> pd.DataFrame:
     )
     return agr.sort_values("mes_desc")
 
-# ─── Render principal ────────────────────────────────────────────────────────
+# Función Render principal
 def render_artistas_wrapped(df_artistas: pd.DataFrame, df_escuchas: pd.DataFrame) -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
@@ -288,7 +288,6 @@ def render_artistas_wrapped(df_artistas: pd.DataFrame, df_escuchas: pd.DataFrame
     horas = safe(top1.get(mins_col, 0)) / 60
     reps = int(safe(top1.get(reps_col, 0)))
 
-    # "Top artista" en lugar de "Tu artista del año"
     st.markdown(f"""
     <div class="big-fact">
         <div class="big-fact-kicker">Tu #1 absoluto</div>
@@ -384,7 +383,6 @@ def render_artistas_wrapped(df_artistas: pd.DataFrame, df_escuchas: pd.DataFrame
         )
         st.plotly_chart(fig_desc, use_container_width=True)
 
-    # Obsesión mensual con diseño uniforme
     if df_escuchas is not None and not df_escuchas.empty and {"mes", "nombre_artista", "minutos_reproducidos"}.issubset(df_escuchas.columns):
         st.subheader("📀 Tu obsesión según el mes")
 
