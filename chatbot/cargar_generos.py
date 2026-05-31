@@ -2,7 +2,7 @@ import ast
 import pandas as pd
 
 
-# FUNCIÓN PRINCIPAL: cargar y limpiar el CSV
+# cargar y limpiar el CSV
 
 def cargar_csv_generos(ruta: str) -> pd.DataFrame:
     """
@@ -46,7 +46,7 @@ def cargar_csv_generos(ruta: str) -> pd.DataFrame:
     return df
 
 
-# FUNCIÓN AUXILIAR: parsear listas guardadas como string
+#  parsear listas guardadas como string
 
 def _parse_lista(valor) -> list:
     """

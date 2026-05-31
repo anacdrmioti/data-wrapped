@@ -5,7 +5,7 @@ from datetime import datetime
 from chatbot.cargar_generos import cargar_csv_generos
 from chatbot.tratamiento_generos import enriquecer_con_generos
 
-# CARGA DEL CSV DE GÉNEROS (se hace una sola vez al importar)
+# CARGA DEL CSV DE GÉNEROS 
 
 _RUTA_CSV_GENEROS = "data/canciones_clasificadas.csv"
 
@@ -147,7 +147,6 @@ def build_user_context(data: dict, persona_id: str,
             )
 
     # 6. Géneros, moods y características musicales 
-    # Esta es la parte nueva: cruzamos con el CSV externo
     if "usuario_track" in data:
         df_generos = _get_df_generos()
 

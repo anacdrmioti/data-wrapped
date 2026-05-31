@@ -377,7 +377,7 @@ def page_inicio():
             """,
             unsafe_allow_html=True
         )
-        nombre = st.text_input("Tu nombre", placeholder="¿Cómo te llamas?", label_visibility="visible")
+        nombre = st.text_input("Tu nombre de usuario", placeholder="¿Cómo te llamas?", label_visibility="visible")
         uploaded_file = st.file_uploader(
             "Archivo ZIP de Spotify",
             type=["zip"],

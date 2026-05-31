@@ -62,16 +62,15 @@ def transcribir_audio(audio_bytes: bytes) -> str:
         client = _get_client()
 
         # Groq espera un objeto tipo fichero. Usamos BytesIO con seek(0)
-        # para garantizar que el cursor está al inicio antes de enviarlo.
         audio_buffer = io.BytesIO(audio_bytes)
-        audio_buffer.seek(0)  # CRÍTICO: sin esto Groq recibe 0 bytes
+        audio_buffer.seek(0)  
 
         transcripcion = client.audio.transcriptions.create(
             model="whisper-large-v3-turbo",
             file=("audio.wav", audio_buffer, "audio/wav"),
             language="es",           # forzar español 
             response_format="text",  # devuelve string directamente, sin JSON
-            temperature=0.0,         # más determinista, mejor transcripción literal
+            temperature=0.0,         #  transcripción literal
         )
 
         # Con response_format="text" Groq devuelve el string directamente

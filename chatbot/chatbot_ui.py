@@ -423,6 +423,7 @@ def _render_grupal(data: dict, persona_id: str, ahora: datetime, dia_semana: str
 
     grupo = [persona_id] + amigos_seleccionados
 
+
     if len(grupo) < 2:
         st.info("👆 Selecciona al menos un amigo para empezar.")
         return
@@ -430,18 +431,21 @@ def _render_grupal(data: dict, persona_id: str, ahora: datetime, dia_semana: str
     # ── Panel de afinidad ──────────────────────────────────────
     st.markdown(f"### 🎵 Grupo: {' · '.join(grupo)}")
 
-    with st.expander("🔗 Ver canciones que os unen", expanded=False):
+    with st.expander("🔗 Ver canciones que os unen", expanded=True):
         df_une = _cancion_que_mas_une(df_global, grupo)
         df_une_comunes = df_une[df_une["n_usuarios"] >= 2]
+        
         if df_une_comunes.empty:
             st.info("No hay canciones que todos hayáis escuchado. ¡Quizás sea el momento de descubrirlas juntos!")
         else:
             st.markdown(f"**{len(df_une_comunes)} canciones en común:**")
+            df_une_comunes = df_une_comunes.reset_index(drop=True)
             for _, r in df_une_comunes.iterrows():
                 st.markdown(
                     f"🎵 **{r['nombre_cancion']}** — {r['nombre_artista']} "
                     f"&nbsp;|&nbsp; {int(r['n_usuarios'])}/{len(grupo)} usuarios"
                 )
+        
 
     # ── Sugerencias ────────────────────────────────────────────
     st.markdown("#### 💡 Sugerencias de preguntas grupales")
@@ -581,7 +585,6 @@ def render_chatbot(data: dict, persona_id: str):
             st.write(f"**Día:** {dia_semana.capitalize()}")
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        # CAMBIO 3 (limpiar chat)
         if st.button("🗑️ Limpiar chat", use_container_width=True):
             st.session_state.chat_history = []
             st.session_state.pop("amigos_seleccionados_prev", None)
